@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <title>KeyboardFingerPrint</title>
+</head>
+<body>
+  <h2>Count symbol interval</h2>
+  <%# <form> %>
+    <input type="text" id="symbol_interval">
+
+    <button onClick="sendPass();">Send</button>
+  <%# </form> %>
+
+  <p>Current intervals <span id="symbol_interval_output"></span></p>
+
+  <script>
+    let last_timestamp;
+    let last_symbol;
+    let intervals = [];
+
+    let si_input = document.getElementById("symbol_interval");
+    let si_output = document.getElementById("symbol_interval_output");
+
+    function countSymbolInterval(event) {
+      // Counts interval between two symbols
+      if (event.target.value == '') {
+        intervals = [];
+        si_output.textContent = intervals;
+        
+        return 0;
+      } 
+      
+      let timestamp = new Date().getTime();
+      let symbol = event.data;
+      let interval = 0;
+
+      console.log('Call')
+
+      if (last_timestamp) {
+        interval = timestamp - last_timestamp;
+        intervals.push([symbol, interval]);
+      }
+
+      last_timestamp = timestamp;
+      last_symbol = symbol;
+
+      si_output.textContent = intervals;
+      // console.log(`Current intervals ${event.data}`)
+      // console.log(`Current intervals ${intervals}`)
+      return interval;
+    }
+
+    // Send password with intervals data
+    $("form").submit(sendPass);
+
+    function sendPass() {
+      let sendData = {
+        intervals: intervals,
+        password: si_input.value
+      } 
+
+      $.ajax({
+        url: "/keyboard/fingerprint",
+        type: "POST",
+        dataType: "json",
+        data: sendData
+      })
+    }
+
+    si_input.addEventListener('input', countSymbolInterval);
+  </script>
+</body>
+</html>
