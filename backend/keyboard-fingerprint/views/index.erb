@@ -10,6 +10,7 @@
   <h2>Count symbol interval</h2>
   <%# <form> %>
     <input type="text" id="symbol_interval">
+    <input type="checkbox" id="is_known">
 
     <button onClick="sendPass();">Send</button>
   <%# </form> %>
@@ -23,6 +24,7 @@
 
     let si_input = document.getElementById("symbol_interval");
     let si_output = document.getElementById("symbol_interval_output");
+    let is_known_checkbox = document.getElementById("is_known");
 
     function countSymbolInterval(event) {
       // Counts interval between two symbols
@@ -57,9 +59,12 @@
     $("form").submit(sendPass);
 
     function sendPass() {
+      intervals[0][1] = "0"
+      
       let sendData = {
         intervals: intervals,
-        password: si_input.value
+        password: si_input.value,
+        is_known: is_known_checkbox.checked
       } 
 
       $.ajax({
