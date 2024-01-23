@@ -17,7 +17,6 @@ class ShowStats
         end
       end
 
-      # pairs_sorted = pairs.sort_by(&:s_d_)
       pairs_sorted = pairs.sort_by(&:avg_time)
       pairs_sorted.each { |pair| puts pair.to_s }
     end

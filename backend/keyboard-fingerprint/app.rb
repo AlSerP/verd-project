@@ -1,23 +1,41 @@
 require 'sinatra/base'
 require 'sinatra/json'
 require 'json'
+require 'logger'
 
 require_relative 'models/data_type_messages'
 require_relative 'models/pair_stat'
+require_relative 'models/user_stat'
+require_relative 'models/my_logger'
 
 class FingerprintApp < Sinatra::Base
   EMPTY_STAT = {m_time: 0.0, n: 0, s: 0}
 
   configure do
-    set :symbol_pairs_unknown, {}
-    set :symbol_pairs_known, {}
-    enable :logging
+    begin
+      f = File.open('symbol_pairs.json')
+      data = JSON.load f
+      f.close
 
-    # logger.info "== FingerprintApp settings applied"
+      set :symbol_pairs_known, UserStat.from_json(data)
+
+      puts "== FingerprintApp load data #{settings.symbol_pairs_known}"
+    rescue Errno::ENOENT => e
+      puts "== Can't find symbol_pairs.json"
+
+      set :symbol_pairs_known, UserStat.new
+    end
+
+    set :symbol_pairs_unknown, UserStat.new
+    
+    logger = MyLogger.logger
+    set :logger, logger
   end
 
   get '/' do
-    erb :index
+    is_trained = settings.symbol_pairs_known.ready?
+
+    erb :index, {is_trained: :is_trained}
   end
   
   post '/keyboard/fingerprint' do
@@ -28,47 +46,26 @@ class FingerprintApp < Sinatra::Base
 
     logger.info "INTERVALS #{data} and PASSWORD #{params[:password]} and KNOWN #{is_known}"
 
-    update_pairs(data, is_known)
-    # SymbolStats::Pairs.update_pairs(data, is_known)
-    json result: "ok"
+    msg = perform_data(data)
+
+    json message: msg
   end
   
   private
 
-  def update_pairs(data, is_known)
-    # if is_known
-    #   symbol_pairs = settings.symbol_pairs_known
-    # else
-    #   symbol_pairs = settings.symbol_pairs_unknown
-    # end
-    
-    symbol_pairs = settings.symbol_pairs_known
-    (1...data.size).each do |i|
-      s1, _ = unpack_symbol_data data[i-1]
-      s2, new_time = unpack_symbol_data data[i]
+  def perform_data(data)
+    pairs = settings.symbol_pairs_known
+    msg = ""
 
-      # Get or create symbol's pair data
-      if symbol_pairs.include? s1
-        symbol_pairs[s1][s2] = PairStat.new(s1, s2) unless symbol_pairs[s1].include? s2
-      else
-        symbol_pairs[s1] = {s2 => PairStat.new(s1, s2)}
-      end
-
-      # Update pair's data
-      symbol_pairs[s1][s2].update(new_time)
+    if pairs.ready?
+      res = pairs.verificate(data)
+      msg = "Результат проверки #{res}"
+    else
+      pairs.update(data)
+      pairs.save_to_json
+      msg = "Ваши данные обновлены"
     end
 
-    save(symbol_pairs)
-    logger.info "#{DataTypeMessages.message(is_known)} #{symbol_pairs}"
-  end
-
-  def save(pairs)
-    File.open('symbol_pairs.json', 'w') do |f|
-      f.write(pairs.to_json)
-    end
-  end
-
-  def unpack_symbol_data(data)
-    [data[0], data[1].to_f]
+    msg
   end
 end

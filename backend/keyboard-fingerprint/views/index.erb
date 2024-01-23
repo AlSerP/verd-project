@@ -7,15 +7,20 @@
   <title>KeyboardFingerPrint</title>
 </head>
 <body>
-  <h2>Count symbol interval</h2>
+  <h2>Подсчет показателей клавиатурного подчерка</h2>
+
+  <p>
+    <%= @is_trained ? 'Ваша модель обучена' : 'Ваша модель обучается' %>
+  </p>
   <%# <form> %>
     <input type="text" id="symbol_interval">
     <input type="checkbox" id="is_known">
 
     <button onClick="sendPass();">Send</button>
+    <p id="response_message"></p>
   <%# </form> %>
 
-  <p>Current intervals <span id="symbol_interval_output"></span></p>
+  <p>Текущие показатели: <span id="symbol_interval_output"></span></p>
 
   <script>
     let last_timestamp;
@@ -39,12 +44,14 @@
       let symbol = event.data;
       let interval = 0;
 
-      console.log('Call')
-
       if (last_timestamp) {
         interval = timestamp - last_timestamp;
-        intervals.push([symbol, interval]);
       }
+      else {
+        interval = 0;
+      }
+
+      intervals.push([symbol, interval]);
 
       last_timestamp = timestamp;
       last_symbol = symbol;
@@ -55,23 +62,30 @@
       return interval;
     }
 
-    // Send password with intervals data
-    $("form").submit(sendPass);
+    function clearPass() {
+      si_input.value = '';
+      si_output.textContent = '';
+      intervals = [];
+      last_timestamp = null;
+    }
 
     function sendPass() {
-      intervals[0][1] = "0"
-      
       let sendData = {
         intervals: intervals,
         password: si_input.value,
         is_known: is_known_checkbox.checked
       } 
 
+      clearPass();
+
       $.ajax({
         url: "/keyboard/fingerprint",
         type: "POST",
         dataType: "json",
-        data: sendData
+        data: sendData,
+        success: function(data) {
+          document.getElementById("response_message").textContent = data.message
+        }
       })
     }
 
