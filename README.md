@@ -1,8 +1,9 @@
-Verd project
+# Verd project
+Gem для Rails фреймоврка предназначенный для осуществления поведенческой верификации (Behavioral Verification) пользователя
 
-### Клавиатурный почерк:
+## Клавиатурный почерк
 
-#### Принципы работы
+### Принципы работы
 
 -  представление текста в виде `[['symbol', time_in_ms], ...]`, на основе которого формируется статистическая матрица пользователя, отражающая скорость печати пары символов:
 ```
@@ -27,3 +28,16 @@ _МССО_ - посимвольно производится следующая 
 
 - Данные должны храниться отдельно для каждого устройства, с которого осуществляется доступ к системе;
 
+## Development
+
+After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/AlSerP/behavioral_verification.
+
+## License
+
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
