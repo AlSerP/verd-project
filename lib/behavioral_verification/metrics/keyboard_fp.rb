@@ -1,14 +1,10 @@
 module BehavioralVerification::Metrics
   # Keyboard fingerprint metric
-  class KeyboardFP < BaseMetric
-    def initialize(user)
+  class KeyboardFP < BaseManager
+    def initialize(fp)
       super(user)
 
-      @pairs = {}
-      # средний уровень квадратичного отклонения
-      @avg_s_d = 0
-      # количество записей (символов)
-      @n = 0
+      @fp = fp
     end
 
     def push(pair_stat)
