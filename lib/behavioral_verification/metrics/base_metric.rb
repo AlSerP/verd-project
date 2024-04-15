@@ -31,6 +31,7 @@ module BehavioralVerification
       # using current metric
       def verificate(data)
         exception = nil
+        trustness = nil
 
         bm = Benchmark.measure do
           # begin

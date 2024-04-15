@@ -42,15 +42,18 @@ module BehavioralVerification
         sum_trustness = 0.0
 
         (1...data.size).each do |i|
-          s1, = unpack_symbol_data data[i-1]
+          s1, = unpack_symbol_data data[i - 1]
           s2, time = unpack_symbol_data data[i]
 
-          next unless @pairs.include?(s1) && @pairs[s1].include?(s2)
+          current_symbol = @kfp.symbols.where.find_by(char: s1)
+          current_pair = current_symbol.pairs.find_by(char: s2)
 
-          pair = @pairs[s1][s2]
-          p_t = pair_trustness(pair, time)
+          next if current_symbol.nil?
+          next if current_pair.nil?
+
+          pair_trustness = pair_trustness(current_pair, time)
           # log "Current pair trust #{p_t}"
-          sum_trustness += p_t
+          sum_trustness += pair_trustness
         end
 
         sum_trustness / data.size
@@ -64,14 +67,9 @@ module BehavioralVerification
           # Get or create symbol's pair data
           current_symbol = @kfp.symbols.find_or_create_by(char: s1)
           current_pair = current_symbol.pairs.find_or_create_by({ char: s2 })
-          # if current_symbol
-          #   current_pair = current_symbol.pairs.find_or_create_by({ char: s2 })
-          # else
-          #   @pairs[s1] = { s2 => PairStat.new(s1, s2) }
-          # end
 
           # Update pair's data
-          current_pair.update_time(new_time)
+          current_pair.update(new_time)
           @n += 1
 
           log message: "Updated", s1: s1, s2: s2
@@ -79,12 +77,12 @@ module BehavioralVerification
       end
 
       def pair_trustness(pair, time)
-        t_diff = (pair.avg_time - time).abs
-        s_d = pair.s_d
+        t_diff = (pair.time - time).abs
+        s_d = pair.standard_deviation
 
         return 1.0 if t_diff <= s_d
 
-        s_d.to_f / t_diff
+        s_d / t_diff
       end
 
       def unpack_symbol_data(data)
