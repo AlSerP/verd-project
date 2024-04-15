@@ -4,9 +4,12 @@ module BehavioralVerification
     class SymbolStat
       include Mongoid::Document
 
+      autoload :SymbolPair, "behavioral_verification/models/kfp/symbol_pair"
+      belongs_to :fingerprint, class_name: "BehavioralVerification::Models::KFP"
+
       field :char, type: String
 
-      embeds_many :pairs, class_name: BehavioralVerification::Models::SymbolPair.to_s, as: :owner
+      has_many :pairs, class_name: "BehavioralVerification::Models::SymbolPair"
     end
   end
 end
